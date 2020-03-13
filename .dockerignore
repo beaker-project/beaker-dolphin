@@ -1,0 +1,5 @@
+.git
+.env*
+.gitignore
+app.yml
+node_modules
