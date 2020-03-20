@@ -28,6 +28,7 @@ module.exports = app => {
     const owner = req.body.owner
     const repository = req.body.repo
     const installationId = req.body.installation_id
+    const targetUrl = req.body.target_url
 
     app.auth(installationId)
       .then(api => {
@@ -38,7 +39,8 @@ module.exports = app => {
             sha: commitSha,
             state: commitState,
             description: description,
-            context: context
+            context: context,
+            target_url: targetUrl
           })
           .then(response => {
             res.send(response)
