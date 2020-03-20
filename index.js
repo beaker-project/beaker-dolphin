@@ -2,7 +2,7 @@
  * @param {import('probot').Application} app
  */
 const axios = require('axios')
-const bodyParser = require('body-parser')
+const express = require('express')
 
 function isOwner (approvedAccounts, user) {
   return approvedAccounts.indexOf(user) >= 0
@@ -12,11 +12,8 @@ module.exports = app => {
   // FIXME: replace approvedAccounts with repo collaborators
   const approvedAccounts = (process.env.APPROVED_ACCOUNTS || '').split(',')
   const exp = app.route('/reports')
-  exp.use(require('express').static('public'))
-  exp.use(bodyParser.json())
-  exp.use(bodyParser.urlencoded({
-    extended: true
-  }))
+  exp.use(express.static('public'))
+  exp.use(express.json())
 
   app.log(`Yay, the app was loaded!`)
 
@@ -43,14 +40,8 @@ module.exports = app => {
             target_url: targetUrl
           })
           .then(response => {
-            res.send(response)
+            return res.send(response)
           })
-          .catch(err => {
-            res.send(err)
-          })
-      })
-      .catch(err => {
-        res.send(err)
       })
   })
 
