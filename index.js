@@ -2,22 +2,54 @@
  * @param {import('probot').Application} app
  */
 const axios = require('axios')
+const bodyParser = require('body-parser')
 
 function isOwner (approvedAccounts, user) {
   return approvedAccounts.indexOf(user) >= 0
 }
 
 module.exports = app => {
+  // FIXME: replace approvedAccounts with repo collaborators
   const approvedAccounts = (process.env.APPROVED_ACCOUNTS || '').split(',')
-  const router = app.route('/reports')
-  router.use(require('express').static('public'))
+  const exp = app.route('/reports')
+  exp.use(require('express').static('public'))
+  exp.use(bodyParser.json())
+  exp.use(bodyParser.urlencoded({
+    extended: true
+  }))
 
   app.log(`Yay, the app was loaded!`)
 
-  router.get('/status', (req, res) => {
-    // TODO
-    // context.github.repos.createStatus({ ...params, state: 'success', context: 'nananabatman', description: 'Gods', sha: response.data.head.sha })
-    res.send('hehehe')
+  exp.post('/status', (req, res) => {
+    const commitSha = req.body.commit_sha
+    const commitState = req.body.commit_state
+    const context = `Beaker Dolphin / ${req.body.context}`
+    const description = req.body.description || 'It will happen to you'
+    const owner = req.body.owner
+    const repository = req.body.repo
+    const installationId = req.body.installation_id
+
+    app.auth(installationId)
+      .then(api => {
+        api.repos.createStatus(
+          {
+            owner: owner,
+            repo: repository,
+            sha: commitSha,
+            state: commitState,
+            description: description,
+            context: context
+          })
+          .then(response => {
+            res.send(response)
+          })
+          .catch(err => {
+            res.send(err)
+          })
+      })
+      .catch(err => {
+        res.send(err)
+      })
   })
 
   app.on('ping', async context => {
@@ -42,9 +74,6 @@ module.exports = app => {
       return app.log(`User ${sender} is not authorized to run CI.`)
     }
     axios.post(process.env.CI_AGENT, context.payload)
-      .then(res => {
-        app.log(res.data)
-      })
       .catch(err => {
         app.log.error(err)
       })
@@ -70,9 +99,6 @@ module.exports = app => {
       .then(response => {
         const payload = { ...context.payload, ...params, pull_request: { ...response.data } }
         axios.post(process.env.CI_AGENT, payload)
-          .then(res => {
-            app.log(res.data)
-          })
           .catch(err => {
             app.log.error(err)
           })
