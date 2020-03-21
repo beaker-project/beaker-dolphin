@@ -4,13 +4,19 @@
 const axios = require('axios')
 const express = require('express')
 
-function isOwner (approvedAccounts, user) {
-  return approvedAccounts.indexOf(user) >= 0
+isCollaborator = async (context, user) => {
+  context.github.repos.listCollaborators(context.repo())
+    .then(res => {
+      return res.data.map(user => {
+        return user.login
+      }).indexOf(user) >= 0
+    })
+    .catch(() => {
+      return false
+    })
 }
 
 module.exports = app => {
-  // FIXME: replace approvedAccounts with repo collaborators
-  const approvedAccounts = (process.env.APPROVED_ACCOUNTS || '').split(',')
   const exp = app.route('/reports')
   exp.use(express.static('public'))
   exp.use(express.json())
@@ -62,7 +68,7 @@ module.exports = app => {
   ], async context => {
     const sender = context.payload.sender.login
 
-    if (!isOwner(approvedAccounts, sender)) {
+    if (!isCollaborator(context, sender)) {
       // Let's keep this for us and do not report it
       return app.log(`User ${sender} is not authorized to run CI.`)
     }
@@ -76,13 +82,12 @@ module.exports = app => {
     'issue_comment.created',
     'issue_comment.edited'
   ], async context => {
-    app.log(context.payload)
     if (!context.payload.comment.body.includes('/test')) {
       return
     }
     const sender = context.payload.sender.login
 
-    if (!isOwner(approvedAccounts, sender)) {
+    if (!isCollaborator(context, sender)) {
       const params = context.issue({ body: 'Only collaborators can trigger tests 👀' })
       return context.github.issues.createComment(params)
     }
