@@ -93,9 +93,9 @@ module.exports = app => {
     }
 
     const params = context.issue()
-    context.github.pullRequests.get(params)
+    context.github.pulls.get(params)
       .then(response => {
-        const payload = { ...context.payload, ...params, pull_request: { ...response.data } }
+        const payload = { ...context.payload, ...params, pull_request: { ...response.data }, action: 'synchronize' }
         axios.post(process.env.CI_AGENT, payload)
           .catch(err => {
             app.log.error(err)
