@@ -4,16 +4,15 @@
 const axios = require('axios')
 const express = require('express')
 
-isCollaborator = async (context, user) => {
-  context.github.repos.listCollaborators(context.repo())
-    .then(res => {
-      return res.data.map(user => {
-        return user.login
-      }).indexOf(user) >= 0
-    })
-    .catch(() => {
-      return false
-    })
+const isCollaborator = async (context, user) => {
+  try {
+    const collaborators = await context.github.repos.listCollaborators(context.repo())
+    return collaborators.data.map(user => {
+      return user.login
+    }).indexOf(user) >= 0
+  } catch {
+    return false
+  }
 }
 
 module.exports = app => {
@@ -21,7 +20,7 @@ module.exports = app => {
   exp.use(express.static('public'))
   exp.use(express.json())
 
-  app.log(`Yay, the app was loaded!`)
+  app.log('Yay, the app was loaded!')
 
   exp.post('/status', (req, res) => {
     const commitSha = req.body.commit_sha
@@ -68,7 +67,7 @@ module.exports = app => {
   ], async context => {
     const sender = context.payload.sender.login
 
-    if (!isCollaborator(context, sender)) {
+    if (!await isCollaborator(context, sender)) {
       // Let's keep this for us and do not report it
       return app.log(`User ${sender} is not authorized to run CI.`)
     }
@@ -87,7 +86,7 @@ module.exports = app => {
     }
     const sender = context.payload.sender.login
 
-    if (!isCollaborator(context, sender)) {
+    if (!await isCollaborator(context, sender)) {
       const params = context.issue({ body: 'Only collaborators can trigger tests 👀' })
       return context.github.issues.createComment(params)
     }
