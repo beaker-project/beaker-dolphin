@@ -15,6 +15,31 @@ const isCollaborator = async (context, user) => {
   }
 }
 
+const handleTest = async (app, context) => {
+  const sender = context.payload.sender.login
+
+  if (!await isCollaborator(context, sender)) {
+    const params = context.issue({ body: 'Only collaborators can trigger tests 👀' })
+    return context.github.issues.createComment(params)
+  }
+
+  const params = context.issue()
+  context.github.pulls.get(params)
+    .then(response => {
+      const payload = { ...context.payload, ...params, pull_request: { ...response.data }, action: 'synchronize' }
+      axios.post(process.env.CI_AGENT, payload)
+        .catch(err => {
+          app.log.error(err)
+        })
+    })
+}
+
+const handleEyes = async (app, context) => {
+  const params = context.repo()
+  const commentId = context.payload.comment.id
+  await context.github.reactions.createForIssueComment({ ...params, content: 'eyes', comment_id: commentId })
+}
+
 module.exports = app => {
   const exp = app.route('/reports')
   exp.use(express.static('public'))
@@ -81,24 +106,11 @@ module.exports = app => {
     'issue_comment.created',
     'issue_comment.edited'
   ], async context => {
-    if (!context.payload.comment.body.includes('/test')) {
-      return
+    if (context.payload.comment.body.includes('/👀')) {
+      await handleEyes(app, context)
     }
-    const sender = context.payload.sender.login
-
-    if (!await isCollaborator(context, sender)) {
-      const params = context.issue({ body: 'Only collaborators can trigger tests 👀' })
-      return context.github.issues.createComment(params)
+    if (context.payload.comment.body.includes('/test')) {
+      await handleTest(app, context)
     }
-
-    const params = context.issue()
-    context.github.pulls.get(params)
-      .then(response => {
-        const payload = { ...context.payload, ...params, pull_request: { ...response.data }, action: 'synchronize' }
-        axios.post(process.env.CI_AGENT, payload)
-          .catch(err => {
-            app.log.error(err)
-          })
-      })
   })
 }
