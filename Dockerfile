@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:13.10.1
 LABEL \
         name="Beaker Dolphin" \
         maintainer="Martin Styk <martin.styk@redhat.com>" \
