@@ -44,10 +44,11 @@ module.exports = app => {
   const exp = app.route('/reports')
   exp.use(express.static('public'))
   exp.use(express.json())
+  exp.use(express.urlencoded({ extended: true }))
 
   app.log('Yay, the app was loaded!')
 
-  exp.post('/status', (req, res) => {
+  exp.post('/status', (req, res, next) => {
     const commitSha = req.body.commit_sha
     const commitState = req.body.commit_state
     const context = `Beaker Dolphin / ${req.body.context}`
@@ -70,15 +71,23 @@ module.exports = app => {
             target_url: targetUrl
           })
           .then(response => {
-            return res.send(response)
+            return res.status(response.status).send(response.data)
           })
+          .catch(err => {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(err.status).send({ error: err.message })
+          })
+      })
+      .catch(err => {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(err.status).send({ error: err.message })
       })
   })
 
   app.on('ping', async context => {
     axios.post(process.env.CI_AGENT, context.payload)
       .then(response => {
-        app.log(response.data)
+        app.log(response)
       })
       .catch(error => {
         app.log.error(error)
