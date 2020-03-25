@@ -1,6 +1,6 @@
 FROM node:latest
 LABEL \
-        name="Beaker bot" \
+        name="Beaker Dolphin" \
         maintainer="Martin Styk <martin.styk@redhat.com>" \
         license="GPLv3"
 WORKDIR /usr/src/app

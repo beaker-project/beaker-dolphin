@@ -1,22 +1,22 @@
 {
-  "name": "beaker-bot",
+  "name": "beaker-dolphin",
   "version": "1.0.0",
-  "description": "Beaker Workflow god",
+  "description": "Beaker Workflow God",
   "author": "Martin Styk <mastyk@redhat.com>",
-  "license": "GPLv3",
-  "repository": "https://github.com//beaker-bot-ng.git",
-  "homepage": "https://github.com//beaker-bot-ng",
-  "bugs": "https://github.com//beaker-bot-ng/issues",
+  "license": "GPL-3.0",
+  "repository": "https://github.com//beaker-dolphin.git",
+  "homepage": "https://github.com//beaker-dolphin",
+  "bugs": "https://github.com//beaker-dolphin/issues",
   "keywords": [
     "github",
-    "bot-app"
+    "bot-app",
+    "dolphin",
+    "beaker"
   ],
   "scripts": {
     "dev": "nodemon",
     "start": "probot run ./index.js",
-    "lint": "standard --fix",
-    "test": "jest --coverage && standard",
-    "test:watch": "jest --watchAll --notify --notifyMode=change --coverage"
+    "lint": "standard --fix"
   },
   "dependencies": {
     "axios": "^0.19.2",
@@ -24,7 +24,10 @@
     "probot": "^9.11.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
     "babel-eslint": "^10.1.0",
+    "husky": "^4.2.3",
     "jest": "^25.1.0",
     "nock": "^12.0.3",
     "nodemon": "^2.0.2",
@@ -32,7 +35,7 @@
     "standard": "^14.3.3"
   },
   "engines": {
-    "node": ">= 8.3.0"
+    "node": ">= 13.11.0"
   },
   "standard": {
     "parser": "babel-eslint",
@@ -49,5 +52,10 @@
   },
   "jest": {
     "testEnvironment": "node"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
   }
 }

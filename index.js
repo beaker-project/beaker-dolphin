@@ -48,7 +48,7 @@ module.exports = app => {
 
   app.log('Yay, the app was loaded!')
 
-  exp.post('/status', (req, res, next) => {
+  exp.post('/status', (req, res) => {
     const commitSha = req.body.commit_sha
     const commitState = req.body.commit_state
     const context = `Beaker Dolphin / ${req.body.context}`
