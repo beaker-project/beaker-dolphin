@@ -115,7 +115,7 @@ module.exports = app => {
     'issue_comment.created',
     'issue_comment.edited'
   ], async context => {
-    if (context.payload.comment.body.includes('/👀')) {
+    if (['/👀', '/:eyes:'].some(v => context.payload.comment.body.includes(v))) {
       await handleEyes(app, context)
     }
     if (context.payload.comment.body.includes('/test')) {
